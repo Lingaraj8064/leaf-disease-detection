@@ -1,0 +1,10 @@
+flask
+numpy
+pandas
+matplotlib
+opencv-python
+tensorflow
+keras
+scikit-learn
+pillow
+gunicorn  # Required for production deployment
