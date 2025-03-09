@@ -2,11 +2,12 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Input
 import numpy as np
+import os
 from preprocess import load_data
 
 # Load dataset
-X_train, y_train = load_data('../dataset/train/')
-X_test, y_test = load_data('../dataset/test/')
+X_train, y_train = load_data('dataset/train/')
+X_test, y_test = load_data('dataset/test/')
 
 print("X_train shape:", X_train.shape)  # Debugging: Ensure correct shape
 
@@ -19,7 +20,7 @@ model = Sequential([
     MaxPooling2D(2,2),
     Flatten(),
     Dense(128, activation='relu'),
-    Dense(1, activation='sigmoid')
+    Dense(1, activation='sigmoid')  # Use 'softmax' if multi-class
 ])
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
@@ -27,7 +28,8 @@ model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']
 # Train the model
 model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
 
-# Save the trained model
-# Save the model in the recommended format
-model.save('../models/leaf_disease_model.keras')
+# Ensure models/ folder exists before saving
+os.makedirs('models', exist_ok=True)
 
+# Save the trained model in TensorFlow's recommended format
+model.save('models/leaf_disease_model.keras')
