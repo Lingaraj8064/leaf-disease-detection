@@ -4,60 +4,48 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-# Initialize Flask app
-app = Flask(__name__)
+# Set the correct template folder
+app = Flask(__name__, template_folder="templates")
 
 # Set upload folder
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Ensure the folder exists
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load the trained model
 MODEL_PATH = "models/leaf_disease_model.keras"
+model = tf.keras.models.load_model(MODEL_PATH)
 
-try:
-    model = tf.keras.models.load_model(MODEL_PATH)
-    print("✅ Model loaded successfully")
-except Exception as e:
-    print(f"❌ Model loading failed: {e}")
-
-# Class labels
+# Class labels (update according to your dataset)
 CLASS_LABELS = ["Healthy", "Diseased"]
 
 # Image preprocessing function
 def preprocess_image(image_path):
-    try:
-        img = cv2.imread(image_path)
-        img = cv2.resize(img, (128, 128))
-        img = img / 255.0  # Normalize
-        return np.expand_dims(img, axis=0)
-    except Exception as e:
-        print(f"❌ Error in image preprocessing: {e}")
-        return None
+    img = cv2.imread(image_path)
+    img = cv2.resize(img, (128, 128))
+    img = img / 255.0  # Normalize
+    return np.expand_dims(img, axis=0)
 
-# Homepage
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         try:
             file = request.files.get("file")
-            print("📂 File received:", file)
+            print("📂 File received:", file)  # Debugging
 
             if not file:
                 print("❌ No file uploaded")
                 return jsonify({"error": "No file uploaded"}), 400
 
-            # Save the uploaded file
             filename = file.filename.replace(" ", "_").lower()
             file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(file_path)
             print(f"✅ Image saved at: {file_path}")
 
-            # Preprocess the image
+            # Preprocess image
             img_array = preprocess_image(file_path)
-            if img_array is None:
-                return jsonify({"error": "Error in processing image"}), 500
-
             print(f"✅ Image processed: Shape - {img_array.shape}")
 
             # Make prediction
@@ -68,11 +56,10 @@ def index():
             return jsonify({"image_url": f"/{file_path}", "prediction": predicted_class})
 
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ Error: {e}")  # Log error message
             return jsonify({"error": str(e)}), 500
 
     return render_template("index.html")
 
-# Run the app
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=True)
+    app.run(debug=True)
